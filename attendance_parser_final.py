@@ -1,10 +1,3 @@
-### Before run this script change the 'collection_date' in line 181
-### The first time you run this script set 'header=True', subsequent times set it to 'False' in 'df.to_csv()' in line 215
-### Update 'raw_data' to the new data in line 128
-### Make sure that the 'raw_data' has '-' in it
-### When all the above is done then run the script
-
-
 import re
 import pandas as pd
 #from datetime import datetime
