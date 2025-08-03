@@ -170,56 +170,9 @@ if __name__ == "__main__":
     week = "5"  # Replace with your actual week
     year = "2025"  # Replace with your actual year
     
-    raw_data ="""*AZ/DFW/OK*
-    👉🏾Arlington -  10|11
-    👉🏾Dallas -   18 | 13
-    👉🏾Fort Worth -    5| 5
-    👉🏾North Dallas -  16 | 6
-    👉🏾North Phoenix - 4| 3
-    👉🏾OKC -   11| 15
-    👉🏾Phoenix -   46 | 44
+    raw_data ="""
+    *CONSTITUENCY_NAME*
+    👉🏾Branch 1 - 10|15
+    👉🏾Branch 2 - 8|12"""
 
-    *CALIFORNIA* 
-    👉🏾Antioch -  6| 6
-    👉🏾Los Angeles - 11 | 13
-    👉🏾Oakland -   29| 26
-    👉🏾San Diego -    3|3
-    👉🏾Sacramento -   9| 7
-    👉🏾Silicon Valley -  9| 13
-
-    *CANADA*
-    👉🏾Calgary -   10| 14
-    👉🏾Edmonton -  5| 8
-    👉🏾Lethbridge -  4| 22
-    👉🏾North Vancouver - 5 | 7
-    👉🏾Vancouver -   8 | 10
-
-    *MO/KS/TX*
-    👉🏾St. Louis -  3| 7
-    👉🏾Austin -     2| 5
-    👉🏾Houston North -  13 | 8
-    👉🏾Houston Northwest - 8 | 5
-    👉🏾Houston South -    13| 16
-    👉🏾Houston Southwest - 3 | 5
-    👉🏾Independence -   6 | 4
-    👉🏾Kansas City -   26| 26
-    👉🏾San Antonio -  9|11
-
-    *PACIFIC NORTHWEST*
-    👉🏾Olympia -   2| 4
-    👉🏾Portland -   22| 22
-    👉🏾Salem Estates -  3| 4
-    👉🏾Seattle - 4|10
-    👉🏾Tacoma -   26 | 24
-
-    *SOUTHWEST*
-    👉🏾Colorado Springs - 3 | 2
-    👉🏾Denver -    9 | 10
-    👉🏾El Paso -    1| 3
-    👉🏾Las Cruces -  5| 7
-    👉🏾Las Vegas -    16| 21
-    👉🏾Salt Lake City -   7|7
-    👉🏾Socorro -   3| 4
-    👉🏾West Las Vegas -  3| 3"""
-    
     main(raw_data, pastor, month, week, year, start_row)
