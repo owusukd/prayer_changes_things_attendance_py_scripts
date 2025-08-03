@@ -1,0 +1,232 @@
+### Before run this script change the 'collection_date' in line 181
+### The first time you run this script set 'header=True', subsequent times set it to 'False' in 'df.to_csv()' in line 215
+### Update 'raw_data' to the new data in line 128
+### Make sure that the 'raw_data' has '-' in it
+### When all the above is done then run the script
+
+
+import re
+import pandas as pd
+#from datetime import datetime
+from typing import List, Dict
+
+def parse_attendance_data(data: str, pastor: str, month: str, week: str, year: str) -> List[Dict[str, str]]:
+    """
+    Parse attendance data from the given text format.
+    
+    Args:
+        data (str): Raw text data containing attendance information
+        
+    Returns:
+        List[Dict]: List of dictionaries containing parsed attendance data
+    """
+    
+    # Split data into lines and clean up
+    lines = [line.strip() for line in data.split('\n') if line.strip()]
+    
+    parsed_data = []
+    current_constituency = None
+    
+    for line in lines:
+        # Check if line is a constituency header (enclosed in asterisks)
+        if line.startswith('*') and line.endswith('*'):
+            # Extract constituency name, removing asterisks
+            current_constituency = line.strip('*')
+        
+        # Check if line contains branch attendance data (starts with 👉🏾)
+        elif line.startswith('👉🏾') and current_constituency:
+            # Parse branch attendance line
+            branch_data = parse_branch_line(line, current_constituency, pastor, month, week, year)
+            if branch_data:
+                parsed_data.append(branch_data)
+    
+    return parsed_data
+
+def parse_branch_line(line: str, constituency: str, pastor: str, month: str, week: str, year: str) -> Dict[str, str]:
+    """
+    Parse a single branch attendance line.
+    
+    Args:
+        line (str): Line containing branch attendance data
+        constituency (str): Current constituency name
+        
+    Returns:
+        Dict: Parsed branch data or None if parsing fails
+    """
+    
+    # Remove the emoji and clean up the line
+    line = line.replace('👉🏾', '').strip()
+    
+    # Use regex to extract branch name and attendance numbers
+    # Pattern looks for: branch_name - attendance/expected_attendance
+    pattern = r'^(.+?)\s*-\s*(\d+)\s*[/|]\s*(\d+)$'
+    match = re.search(pattern, line)
+    
+    if match:
+        branch_name = match.group(1).strip()
+        attendance = int(match.group(2))
+        expected_attendance = int(match.group(3))
+        
+        return {
+            'Constituency': constituency,
+            'Branch': branch_name,
+            'Pastor': pastor,
+            'Attendance': attendance,
+            'Target': expected_attendance,
+            'Attendance_rate': round((attendance / expected_attendance) * 100, 2),
+            'Month': month,
+            'Week': week,
+            'Year': year
+        }
+    
+    return None
+
+def analyze_attendance_data(parsed_data: List[Dict]) -> Dict:
+    """
+    Perform basic analysis on the parsed attendance data.
+    
+    Args:
+        parsed_data (List[Dict]): Parsed attendance data
+        
+    Returns:
+        Dict: Analysis results
+    """
+    
+    if not parsed_data:
+        return {}
+    
+    df = pd.DataFrame(parsed_data)
+    
+    analysis = {
+        'total_branches': len(df),
+        'total_attendance': df['Attendance'].sum(),
+        'total_expected': df['Target'].sum(),
+        'overall_attendance_rate': round((df['Attendance'].sum() / df['Target'].sum()) * 100, 2),
+        'constituency_summary': df.groupby('Constituency').agg({
+            'Attendance': 'sum',
+            'Target': 'sum',
+            'Branch': 'count'
+        }).rename(columns={'Branch': 'Branch_count'}).round(2),
+        'top_performing_branches': df.nlargest(5, 'Attendance_rate')[['Branch', 'Constituency', 'Attendance_rate']],
+        'lowest_performing_branches': df.nsmallest(5, 'Attendance_rate')[['Branch', 'Constituency', 'Attendance_rate']]
+    }
+    
+    # Calculate attendance rate for each constituency
+    constituency_rates = []
+    for constituency in df['Constituency'].unique():
+        constituency_data = df[df['Constituency'] == constituency]
+        rate = (constituency_data['Attendance'].sum() / constituency_data['Target'].sum()) * 100
+        constituency_rates.append({'Constituency': constituency, 'Attendance_rate': round(rate, 2)})
+    
+    analysis['constituency_rates'] = sorted(constituency_rates, key=lambda x: x['Attendance_rate'], reverse=True)
+    
+    return analysis
+
+def main(raw_data, pastor, month, week, year, start_row=None):
+    """
+    Main function to demonstrate the parser with the provided data.
+    """
+    
+    parsed_data = parse_attendance_data(raw_data, pastor, month, week, year)
+    
+    # Convert to DataFrame for easier viewing
+    df = pd.DataFrame(parsed_data)
+    
+    # Display results
+    print("=== PARSED ATTENDANCE DATA ===")
+    print(df.to_string(index=False))
+    print(f"\nTotal records parsed: {len(df)}")
+    
+    # Perform analysis
+    analysis = analyze_attendance_data(parsed_data)
+    
+    print("\n=== ANALYSIS RESULTS ===")
+    print(f"Total branches: {analysis['total_branches']}")
+    print(f"Total attendance: {analysis['total_attendance']}")
+    print(f"Total expected: {analysis['total_expected']}")
+    print(f"Overall attendance rate: {analysis['overall_attendance_rate']}%")
+    
+    print("\n=== CONSTITUENCY SUMMARY ===")
+    print(analysis['constituency_summary'])
+    
+    print("\n=== CONSTITUENCY ATTENDANCE RATES ===")
+    for item in analysis['constituency_rates']:
+        print(f"{item['Constituency']}: {item['Attendance_rate']}%")
+    
+    print("\n=== TOP 5 PERFORMING BRANCHES ===")
+    print(analysis['top_performing_branches'][['Branch', 'Constituency', 'Attendance_rate']].to_string(index=False))
+    
+    print("\n=== LOWEST 5 PERFORMING BRANCHES ===")
+    print(analysis['lowest_performing_branches'][['Branch', 'Constituency', 'Attendance_rate']].to_string(index=False))
+    
+    #### Save to excel file
+    ## First use of this code
+    # with pd.ExcelWriter('prayer_changes_everything_attendance_data.xlsx', mode='w', engine='openpyxl') as writer:
+    #     df.to_excel(writer, sheet_name='Sheet1', index=False, header=True)
+    ## Subsequent use 
+    with pd.ExcelWriter('prayer_changes_everything_attendance_data.xlsx', mode='a', if_sheet_exists="overlay", engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Sheet1', index=False, header=False, startrow=start_row)
+        
+    print("\nData saved to 'prayer_changes_everything_attendance_data.xlsx'")
+    
+
+if __name__ == "__main__":
+    start_row = 161 # first run set to 'None'. open saved excel file after first run for the row number to append from: it is same as the last row number
+    pastor = "NA"  # Replace with your actual pastor's name
+    month = "July"  # Replace with your actual month
+    week = "5"  # Replace with your actual week
+    year = "2025"  # Replace with your actual year
+    
+    raw_data ="""*AZ/DFW/OK*
+    👉🏾Arlington -  10|11
+    👉🏾Dallas -   18 | 13
+    👉🏾Fort Worth -    5| 5
+    👉🏾North Dallas -  16 | 6
+    👉🏾North Phoenix - 4| 3
+    👉🏾OKC -   11| 15
+    👉🏾Phoenix -   46 | 44
+
+    *CALIFORNIA* 
+    👉🏾Antioch -  6| 6
+    👉🏾Los Angeles - 11 | 13
+    👉🏾Oakland -   29| 26
+    👉🏾San Diego -    3|3
+    👉🏾Sacramento -   9| 7
+    👉🏾Silicon Valley -  9| 13
+
+    *CANADA*
+    👉🏾Calgary -   10| 14
+    👉🏾Edmonton -  5| 8
+    👉🏾Lethbridge -  4| 22
+    👉🏾North Vancouver - 5 | 7
+    👉🏾Vancouver -   8 | 10
+
+    *MO/KS/TX*
+    👉🏾St. Louis -  3| 7
+    👉🏾Austin -     2| 5
+    👉🏾Houston North -  13 | 8
+    👉🏾Houston Northwest - 8 | 5
+    👉🏾Houston South -    13| 16
+    👉🏾Houston Southwest - 3 | 5
+    👉🏾Independence -   6 | 4
+    👉🏾Kansas City -   26| 26
+    👉🏾San Antonio -  9|11
+
+    *PACIFIC NORTHWEST*
+    👉🏾Olympia -   2| 4
+    👉🏾Portland -   22| 22
+    👉🏾Salem Estates -  3| 4
+    👉🏾Seattle - 4|10
+    👉🏾Tacoma -   26 | 24
+
+    *SOUTHWEST*
+    👉🏾Colorado Springs - 3 | 2
+    👉🏾Denver -    9 | 10
+    👉🏾El Paso -    1| 3
+    👉🏾Las Cruces -  5| 7
+    👉🏾Las Vegas -    16| 21
+    👉🏾Salt Lake City -   7|7
+    👉🏾Socorro -   3| 4
+    👉🏾West Las Vegas -  3| 3"""
+    
+    main(raw_data, pastor, month, week, year, start_row)
