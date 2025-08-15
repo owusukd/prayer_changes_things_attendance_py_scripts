@@ -1,3 +1,10 @@
+### Before run this script change the 'collection_date' in line 181
+### The first time you run this script set 'header=True', subsequent times set it to 'False' in 'df.to_csv()' in line 215
+### Update 'raw_data' to the new data in line 128
+### Make sure that the 'raw_data' has '-' in it
+### When all the above is done then run the script
+
+
 import re
 import pandas as pd
 #from datetime import datetime
@@ -164,15 +171,15 @@ def main(raw_data, pastor, month, week, year, start_row=None):
     
 
 if __name__ == "__main__":
-    start_row = 161 # first run set to 'None'. open saved excel file after first run for the row number to append from: it is same as the last row number
+    start_row = 201 # first run set to 'None'. open saved excel file after first run for the row number to append from: it is same as the last row number
     pastor = "NA"  # Replace with your actual pastor's name
-    month = "July"  # Replace with your actual month
-    week = "5"  # Replace with your actual week
+    month = "August"  # Replace with your actual month
+    week = "1"  # Replace with your actual week
     year = "2025"  # Replace with your actual year
     
     raw_data ="""
     *CONSTITUENCY_NAME*
     👉🏾Branch 1 - 10|15
     👉🏾Branch 2 - 8|12"""
-
+    
     main(raw_data, pastor, month, week, year, start_row)

@@ -64,7 +64,7 @@ def create_constituency_charts(df, workbook):
     n_rows = (n_constituencies + n_cols - 1) // n_cols
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5 * n_rows))
-    fig.suptitle('Monthly Attendance vs Target by Constituency', fontsize=16, fontweight='bold')
+    fig.suptitle('Monthly Average Attendance vs Target by Constituency', fontsize=16, fontweight='bold')
     
     # Flatten axes array for easier iteration
     if n_rows == 1:
@@ -86,7 +86,7 @@ def create_constituency_charts(df, workbook):
         
         # Create bars
         bars1 = ax.bar(x - width/2, const_data['Monthly_Attendance_Avg'], 
-                       width, label='Monthly Attendance Avg', color='skyblue')
+                       width, label='Attendance', color='skyblue')
         bars2 = ax.bar(x + width/2, const_data['Target'], 
                        width, label='Target', color='coral')
         
@@ -96,7 +96,7 @@ def create_constituency_charts(df, workbook):
         ax.set_title(f'{constituency}', fontweight='bold', fontsize=12)
         ax.set_xticks(x)
         ax.set_xticklabels(months, rotation=45, ha='right')
-        ax.legend()
+        # ax.legend()
         ax.grid(True, alpha=0.3, axis='y')
         
         # Add value labels on bars
@@ -115,6 +115,17 @@ def create_constituency_charts(df, workbook):
         row = idx // n_cols
         col = idx % n_cols
         axes[row, col].set_visible(False)
+    
+    # Collect unique handles and labels
+    handles, labels = [], []
+    for ax in fig.axes:
+        for handle, label in zip(*ax.get_legend_handles_labels()):
+            if label not in labels:  # Add only unique labels and their corresponding handles
+                handles.append(handle)
+                labels.append(label)
+    
+    # Create a single legend for the entire figure
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=len(labels))
     
     plt.tight_layout()
     
@@ -153,7 +164,7 @@ def create_branch_charts(df, workbook):
         n_rows = (n_branches + n_cols - 1) // n_cols
         
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5 * n_rows))
-        fig.suptitle(f'{constituency} - Monthly Attendance vs Target by Branch', 
+        fig.suptitle(f'{constituency} - Monthly Average Attendance vs Target by Branch', 
                      fontsize=14, fontweight='bold')
         
         # Handle single subplot case
@@ -180,7 +191,7 @@ def create_branch_charts(df, workbook):
             
             # Create bars
             bars1 = ax.bar(x - width/2, branch_data['Monthly_Attendance_Avg'], 
-                           width, label='Monthly Attendance Avg', color='lightgreen')
+                           width, label='Attendance', color='lightgreen')
             bars2 = ax.bar(x + width/2, branch_data['Target'], 
                            width, label='Target', color='salmon')
             
@@ -190,7 +201,7 @@ def create_branch_charts(df, workbook):
             ax.set_title(f'{branch}', fontweight='bold', fontsize=11)
             ax.set_xticks(x)
             ax.set_xticklabels(months, rotation=45, ha='right')
-            ax.legend()
+            # ax.legend()
             ax.grid(True, alpha=0.3, axis='y')
             
             # Add value labels on bars
@@ -209,6 +220,17 @@ def create_branch_charts(df, workbook):
             row = idx // n_cols
             col = idx % n_cols
             axes[row, col].set_visible(False)
+        
+        # Collect unique handles and labels
+        handles, labels = [], []
+        for ax in fig.axes:
+            for handle, label in zip(*ax.get_legend_handles_labels()):
+                if label not in labels:  # Add only unique labels and their corresponding handles
+                    handles.append(handle)
+                    labels.append(label)
+        
+        # Create a single legend for the entire figure
+        fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=len(labels))
         
         plt.tight_layout()
         
